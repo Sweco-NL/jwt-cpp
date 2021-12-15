@@ -4,12 +4,12 @@
 namespace {
 	extern std::string google_cert;
 	extern std::string google_cert_base64_der;
-	extern std::string google_cert_key;
+	extern std::string google_public_key;
 } // namespace
 
 TEST(HelperTest, Cert2Pubkey) {
 	auto key = jwt::helper::extract_pubkey_from_cert(google_cert);
-	ASSERT_EQ(google_cert_key, key);
+	ASSERT_EQ(google_public_key, key);
 }
 
 TEST(HelperTest, Base64DER2PemCert) {
@@ -52,21 +52,21 @@ TEST(HelperTest, ErrorCodeMessages) {
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
 			  std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
 
-	for (i = 10; i < 16; i++) {
+	for (i = 10; i < 17; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::ecdsa_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::ecdsa_error>(-1)).message());
 	}
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::ecdsa_error>(i)).message(),
 			  std::error_code(static_cast<jwt::error::ecdsa_error>(-1)).message());
 
-	for (i = 10; i < 16; i++) {
+	for (i = 10; i < 18; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::signature_verification_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::signature_verification_error>(-1)).message());
 	}
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::signature_verification_error>(i)).message(),
 			  std::error_code(static_cast<jwt::error::signature_verification_error>(-1)).message());
 
-	for (i = 10; i < 22; i++) {
+	for (i = 10; i < 24; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::signature_generation_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::signature_generation_error>(-1)).message());
 	}
@@ -82,7 +82,45 @@ TEST(HelperTest, ErrorCodeMessages) {
 }
 
 namespace {
-	std::string google_cert = R"(-----BEGIN CERTIFICATE-----
+	std::string google_cert =
+// This is to handle the different subject alternate name ordering
+// see https://github.com/wolfSSL/wolfssl/issues/4397
+#ifdef LIBWOLFSSL_VERSION_HEX
+		R"(-----BEGIN CERTIFICATE-----
+MIIFfTCCBOagAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD
+VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu
+dGVybmV0IEF1dGhvcml0eTAeFw0xMzA1MjIxNTQ5MDRaFw0xMzEwMzEyMzU5NTla
+MGYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1N
+b3VudGFpbiBWaWV3MRMwEQYDVQQKEwpHb29nbGUgSW5jMRUwEwYDVQQDDAwqLmdv
+b2dsZS5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARmSpIUbCqhUBq1UwnR
+Ai7/TNSk6W8JmasR+I0r/NLDYv5yApbAz8HXXN8hDdurMRP6Jy1Q0UIKmyls8HPH
+exoCo4IDlzCCA5MwggLDBgNVHREEggK6MIICtoIMKi5nb29nbGUuY29tgg0qLmFu
+ZHJvaWQuY29tghYqLmFwcGVuZ2luZS5nb29nbGUuY29tghIqLmNsb3VkLmdvb2ds
+ZS5jb22CFiouZ29vZ2xlLWFuYWx5dGljcy5jb22CCyouZ29vZ2xlLmNhggsqLmdv
+b2dsZS5jbIIOKi5nb29nbGUuY28uaW6CDiouZ29vZ2xlLmNvLmpwgg4qLmdvb2ds
+ZS5jby51a4IPKi5nb29nbGUuY29tLmFygg8qLmdvb2dsZS5jb20uYXWCDyouZ29v
+Z2xlLmNvbS5icoIPKi5nb29nbGUuY29tLmNvgg8qLmdvb2dsZS5jb20ubXiCDyou
+Z29vZ2xlLmNvbS50coIPKi5nb29nbGUuY29tLnZuggsqLmdvb2dsZS5kZYILKi5n
+b29nbGUuZXOCCyouZ29vZ2xlLmZyggsqLmdvb2dsZS5odYILKi5nb29nbGUuaXSC
+CyouZ29vZ2xlLm5sggsqLmdvb2dsZS5wbIILKi5nb29nbGUucHSCDyouZ29vZ2xl
+YXBpcy5jboIUKi5nb29nbGVjb21tZXJjZS5jb22CDSouZ3N0YXRpYy5jb22CDCou
+dXJjaGluLmNvbYIQKi51cmwuZ29vZ2xlLmNvbYIWKi55b3V0dWJlLW5vY29va2ll
+LmNvbYINKi55b3V0dWJlLmNvbYIWKi55b3V0dWJlZWR1Y2F0aW9uLmNvbYILKi55
+dGltZy5jb22CC2FuZHJvaWQuY29tggRnLmNvggZnb28uZ2yCFGdvb2dsZS1hbmFs
+eXRpY3MuY29tggpnb29nbGUuY29tghJnb29nbGVjb21tZXJjZS5jb22CCnVyY2hp
+bi5jb22CCHlvdXR1LmJlggt5b3V0dWJlLmNvbYIUeW91dHViZWVkdWNhdGlvbi5j
+b20wHQYDVR0OBBYEFFN409DVTUYFOWYp0Rxq5cqBhJ6GMB8GA1UdIwQYMBaAFL/A
+MOv1QxE+Z7qekfv8atrjaxIkMFsGA1UdHwRUMFIwUKBOoEyGSmh0dHA6Ly93d3cu
+Z3N0YXRpYy5jb20vR29vZ2xlSW50ZXJuZXRBdXRob3JpdHkvR29vZ2xlSW50ZXJu
+ZXRBdXRob3JpdHkuY3JsMA4GA1UdDwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEF
+BQcDAQYIKwYBBQUHAwIwDQYJKoZIhvcNAQEFBQADgYEAAyfQrePfKEL5f67KHp4A
+FrYSrvGJjn+ZQHzzoivX2/GW5Iw0oPqf+Jjy8eO2ufQGG5bz++YnK50WQhwQNRgT
+iK9AyWx8gvtI4bDo569UuabTZqJEdaPlPbQOz5I6m55hQbc0Fwc//kjOFRghAlsb
+OVBpRpkExpB4LxmyUw0tYjY=
+-----END CERTIFICATE-----
+)";
+#else
+		R"(-----BEGIN CERTIFICATE-----
 MIIF8DCCBVmgAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD
 VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu
 dGVybmV0IEF1dGhvcml0eTAeFw0xMzA1MjIxNTQ5MDRaFw0xMzEwMzEyMzU5NTla
@@ -117,6 +155,7 @@ trn0BhuW8/vmJyudFkIcEDUYE4ivQMlsfIL7SOGw6OevVLmm02aiRHWj5T20Ds+S
 OpueYUG3NBcHP/5IzhUYIQJbGzlQaUaZBMaQeC8ZslMNLWI2
 -----END CERTIFICATE-----
 )";
+#endif
 
 	std::string google_cert_base64_der = "MIIF8DCCBVmgAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD"
 										 "VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu"
@@ -151,7 +190,7 @@ OpueYUG3NBcHP/5IzhUYIQJbGzlQaUaZBMaQeC8ZslMNLWI2
 										 "trn0BhuW8/vmJyudFkIcEDUYE4ivQMlsfIL7SOGw6OevVLmm02aiRHWj5T20Ds+S"
 										 "OpueYUG3NBcHP/5IzhUYIQJbGzlQaUaZBMaQeC8ZslMNLWI2";
 
-	std::string google_cert_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string google_public_key = R"(-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZkqSFGwqoVAatVMJ0QIu/0zUpOlv
 CZmrEfiNK/zSw2L+cgKWwM/B11zfIQ3bqzET+ictUNFCCpspbPBzx3saAg==
 -----END PUBLIC KEY-----

@@ -9,6 +9,7 @@ on:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
       - "tests/jsoncons/**"
+      - "tests/boost/**"
       - ".github/actions/**"
       - ".github/workflows/traits.yml"
 
@@ -20,6 +21,8 @@ jobs:
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/jsoncons
+        with:
+          version: 0.167.1
 
       - name: setup
         run: |
@@ -34,3 +37,24 @@ jobs:
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
           ./jsoncons-traits-narrow
+
+  boost-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo cmake --install .
+
+      - name: test
+        run: |
+          cd tests/boost
+          cmake .
+          cmake --build .
+          ./boostjson-traits
